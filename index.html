@@ -111,12 +111,6 @@ button.reset:hover {
         <option value="2p">👥 2 Jugadores</option>
     </select>
 
-    <select id="nivel">
-        <option value="facil">🟢 Fácil</option>
-        <option value="medio">🟡 Medio</option>
-        <option value="dificil">🔴 Difícil</option>
-    </select>
-
     <div id="tablero"></div>
 
     <div id="mensaje"></div>
@@ -147,7 +141,7 @@ for (let i = 0; i < 9; i++) {
 }
 
 function jugar(i, b) {
-    if (!activo || tablero[i]) return;
+    if (!activo || tablero[i] !== "") return;
 
     tablero[i] = turno;
     b.textContent = turno;
@@ -164,6 +158,8 @@ function jugar(i, b) {
 }
 
 function turnoIA() {
+    if (!activo) return;
+
     let libres = tablero
         .map((v,i)=>v===""?i:null)
         .filter(v=>v!==null);
@@ -211,10 +207,11 @@ function actualizarMarcador() {
 }
 
 function reiniciar() {
-    tablero.fill("");
+    tablero = Array(9).fill("");
     turno = "X";
     activo = true;
     mensaje.textContent = "";
+
     [...tableroDiv.children].forEach(b => {
         b.textContent = "";
         b.disabled = false;
@@ -247,4 +244,6 @@ function confeti() {
 
 </body>
 </html>
+
+
 
