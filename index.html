@@ -65,8 +65,20 @@ select, button {
     border: none;
 }
 
-button { background: #667eea; color: white; cursor: pointer; }
+button {
+    background: #667eea;
+    color: white;
+    cursor: pointer;
+}
+
 button:hover { background: #5563d6; }
+
+button.reset {
+    background: #e74c3c;
+}
+button.reset:hover {
+    background: #c0392b;
+}
 
 #mensaje { min-height: 24px; font-weight: 600; }
 
@@ -106,19 +118,26 @@ button:hover { background: #5563d6; }
     </select>
 
     <div id="tablero"></div>
+
     <div id="mensaje"></div>
 
-    <button onclick="reiniciar()">Reiniciar tablero</button>
+    <button onclick="reiniciar()">Nueva partida</button>
+    <button class="reset" onclick="reiniciarMarcador()">Reiniciar marcador</button>
 </div>
 
 <script>
 let tablero = Array(9).fill("");
 let turno = "X";
 let activo = true;
+
 let scoreX = 0, scoreO = 0, scoreE = 0;
 
 const tableroDiv = document.getElementById("tablero");
 const mensaje = document.getElementById("mensaje");
+
+const scoreXEl = document.getElementById("scoreX");
+const scoreOEl = document.getElementById("scoreO");
+const scoreEEl = document.getElementById("scoreE");
 
 for (let i = 0; i < 9; i++) {
     const b = document.createElement("button");
@@ -145,13 +164,20 @@ function jugar(i, b) {
 }
 
 function turnoIA() {
-    let libres = tablero.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+    let libres = tablero
+        .map((v,i)=>v===""?i:null)
+        .filter(v=>v!==null);
+
     let mov = libres[Math.floor(Math.random()*libres.length)];
     jugar(mov, tableroDiv.children[mov]);
 }
 
 function ganador(j) {
-    const c = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    const c = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
     return c.some(l => l.every(i => tablero[i] === j));
 }
 
@@ -162,9 +188,18 @@ function empate() {
 function finalizar(r) {
     activo = false;
 
-    if (r === "X") { scoreX++; mensaje.textContent = "🎉 Ganó X"; confeti(); }
-    else if (r === "O") { scoreO++; mensaje.textContent = "🎉 Ganó O"; confeti(); }
-    else { scoreE++; mensaje.textContent = "😐 Empate"; }
+    if (r === "X") {
+        scoreX++;
+        mensaje.textContent = "🎉 Ganó X";
+        confeti();
+    } else if (r === "O") {
+        scoreO++;
+        mensaje.textContent = "🎉 Ganó O";
+        confeti();
+    } else {
+        scoreE++;
+        mensaje.textContent = "😐 Empate";
+    }
 
     actualizarMarcador();
 }
@@ -175,6 +210,41 @@ function actualizarMarcador() {
     scoreEEl.textContent = scoreE;
 }
 
-const scoreXEl = document.getElementById("scoreX");
-const scoreOEl =
+function reiniciar() {
+    tablero.fill("");
+    turno = "X";
+    activo = true;
+    mensaje.textContent = "";
+    [...tableroDiv.children].forEach(b => {
+        b.textContent = "";
+        b.disabled = false;
+    });
+}
+
+function reiniciarMarcador() {
+    const seguro = confirm(
+        "¿Seguro que querés reiniciar el marcador?\nEsta acción no se puede deshacer."
+    );
+    if (!seguro) return;
+
+    scoreX = 0;
+    scoreO = 0;
+    scoreE = 0;
+    actualizarMarcador();
+}
+
+function confeti() {
+    for (let i = 0; i < 80; i++) {
+        const c = document.createElement("div");
+        c.className = "confeti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = `hsl(${Math.random()*360},100%,50%)`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 1500);
+    }
+}
+</script>
+
+</body>
+</html>
 
