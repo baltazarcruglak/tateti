@@ -1,133 +1,94 @@
-import tkinter as tk
-import math
-import random
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ta-Te-Ti vs IA</title>
 
-ventana = tk.Tk()
-ventana.title("Ta-Te-Ti vs IA")
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+#tablero {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 10px;
+    justify-content: center;
+    margin: 20px;
+}
+.celda {
+    width: 100px;
+    height: 100px;
+    font-size: 40px;
+}
+</style>
+</head>
 
-tablero = [" "] * 9
-botones = []
-dificultad = tk.StringVar(value="Dificil")
+<body>
 
-# ---------- LÓGICA ----------
-def hay_ganador(j):
-    combos = [
-        (0,1,2),(3,4,5),(6,7,8),
-        (0,3,6),(1,4,7),(2,5,8),
-        (0,4,8),(2,4,6)
-    ]
-    return any(tablero[a] == tablero[b] == tablero[c] == j for a,b,c in combos)
+<h1>Ta-Te-Ti vs IA</h1>
 
-def hay_empate():
-    return " " not in tablero
+<select id="nivel">
+    <option value="facil">Fácil</option>
+    <option value="medio">Medio</option>
+    <option value="dificil">Difícil</option>
+</select>
 
-def minimax(maximizando):
-    if hay_ganador("O"):
-        return 1
-    if hay_ganador("X"):
-        return -1
-    if hay_empate():
-        return 0
+<div id="tablero"></div>
+<p id="mensaje"></p>
+<button onclick="reiniciar()">Reiniciar</button>
 
-    if maximizando:
-        mejor = -math.inf
-        for i in range(9):
-            if tablero[i] == " ":
-                tablero[i] = "O"
-                mejor = max(mejor, minimax(False))
-                tablero[i] = " "
-        return mejor
-    else:
-        mejor = math.inf
-        for i in range(9):
-            if tablero[i] == " ":
-                tablero[i] = "X"
-                mejor = min(mejor, minimax(True))
-                tablero[i] = " "
-        return mejor
+<script>
+let tablero = Array(9).fill("");
+const tableroDiv = document.getElementById("tablero");
+const mensaje = document.getElementById("mensaje");
 
-def movimiento_ia_dificil():
-    mejor_valor = -math.inf
-    mejor_mov = None
-    for i in range(9):
-        if tablero[i] == " ":
-            tablero[i] = "O"
-            valor = minimax(False)
-            tablero[i] = " "
-            if valor > mejor_valor:
-                mejor_valor = valor
-                mejor_mov = i
-    return mejor_mov
+for (let i = 0; i < 9; i++) {
+    let b = document.createElement("button");
+    b.className = "celda";
+    b.onclick = () => jugar(i, b);
+    tableroDiv.appendChild(b);
+}
 
-def movimiento_ia():
-    libres = [i for i in range(9) if tablero[i] == " "]
+function jugar(i, b) {
+    if (tablero[i]) return;
+    tablero[i] = "X";
+    b.textContent = "X";
+    if (ganador("X")) return fin("¡Ganaste!");
+    if (empate()) return fin("Empate");
+    setTimeout(turnoIA, 300);
+}
 
-    if dificultad.get() == "Facil":
-        return random.choice(libres)
+function turnoIA() {
+    let libres = tablero.map((v,i)=>v==""?i:null).filter(v=>v!=null);
+    let mov = libres[Math.floor(Math.random()*libres.length)];
+    tablero[mov] = "O";
+    tableroDiv.children[mov].textContent = "O";
+    if (ganador("O")) fin("Ganó la IA");
+    if (empate()) fin("Empate");
+}
 
-    if dificultad.get() == "Medio":
-        if random.random() < 0.5:
-            return random.choice(libres)
-        else:
-            return movimiento_ia_dificil()
+function ganador(j) {
+    const c = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return c.some(l => l.every(i => tablero[i] === j));
+}
 
-    return movimiento_ia_dificil()
+function empate() {
+    return tablero.every(c => c);
+}
 
-# ---------- INTERFAZ ----------
-def click(i):
-    if tablero[i] != " ":
-        return
+function fin(t) {
+    mensaje.textContent = t;
+}
 
-    tablero[i] = "X"
-    botones[i].config(text="X", state="disabled")
+function reiniciar() {
+    tablero.fill("");
+    mensaje.textContent = "";
+    [...tableroDiv.children].forEach(b => b.textContent = "");
+}
+</script>
 
-    if hay_ganador("X"):
-        fin("¡Ganaste! 🎉")
-        return
-    if hay_empate():
-        fin("Empate 😐")
-        return
+</body>
+</html>
 
-    ventana.after(300, turno_ia)
 
-def turno_ia():
-    i = movimiento_ia()
-    tablero[i] = "O"
-    botones[i].config(text="O", state="disabled")
-
-    if hay_ganador("O"):
-        fin("La IA ganó 🤖")
-        return
-    if hay_empate():
-        fin("Empate 😐")
-
-def fin(texto):
-    for b in botones:
-        b.config(state="disabled")
-    etiqueta.config(text=texto)
-
-def reiniciar():
-    global tablero
-    tablero = [" "] * 9
-    etiqueta.config(text="")
-    for b in botones:
-        b.config(text=" ", state="normal")
-
-# ---------- UI ----------
-for i in range(9):
-    b = tk.Button(ventana, text=" ", font=("Arial", 24),
-                  width=5, height=2,
-                  command=lambda i=i: click(i))
-    b.grid(row=i//3, column=i%3)
-    botones.append(b)
-
-etiqueta = tk.Label(ventana, text="", font=("Arial", 14))
-etiqueta.grid(row=3, column=0, columnspan=3)
-
-menu = tk.OptionMenu(ventana, dificultad, "Facil", "Medio", "Dificil")
-menu.grid(row=4, column=0, columnspan=3)
-
-btn = tk.Button(ventana, text="Reiniciar", command=reiniciar)
-btn.grid(row=5, column=0, columnspan=3)
-
-ventana.mainloop()
